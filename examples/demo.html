@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="md2html">
-<title>demo</title>
+<title>md2html Demo</title>
 <style>
 
 /* === md2html Light Theme === */
@@ -278,7 +278,7 @@ sequenceDiagram
     participant T as md2html
     participant B as 浏览器
 
-    U-&gt;&gt;T: python md2html.py doc.md -o doc.html
+    U-&gt;&gt;T: md2html doc.md -o doc.html
     T-&gt;&gt;T: 解析 Markdown
     T-&gt;&gt;T: 渲染 Mermaid
     T-&gt;&gt;T: 高亮代码
@@ -365,7 +365,7 @@ searchInput.addEventListener(<span style="color: #BA2121">&#39;input&#39;</span>
 <h3 id="shell">Shell</h3>
 <div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #3D7B7B; font-style: italic">#!/bin/bash</span>
 <span style="color: #3D7B7B; font-style: italic"># 批量转换 Markdown 文件</span>
-<span style="color: #19177C">MD2HTML</span><span style="color: #666">=</span><span style="color: #BA2121">&quot;python md2html.py&quot;</span>
+<span style="color: #19177C">MD2HTML</span><span style="color: #666">=</span><span style="color: #BA2121">&quot;md2html&quot;</span>
 
 <span style="color: #008000; font-weight: bold">for</span><span style="color: #BBB"> </span>file<span style="color: #BBB"> </span><span style="color: #008000; font-weight: bold">in</span><span style="color: #BBB"> </span>docs/*.md;<span style="color: #BBB"> </span><span style="color: #008000; font-weight: bold">do</span>
 <span style="color: #BBB">    </span><span style="color: #19177C">name</span><span style="color: #666">=</span><span style="color: #008000; font-weight: bold">$(</span>basename<span style="color: #BBB"> </span><span style="color: #BA2121">&quot;</span><span style="color: #19177C">$file</span><span style="color: #BA2121">&quot;</span><span style="color: #BBB"> </span>.md<span style="color: #008000; font-weight: bold">)</span>

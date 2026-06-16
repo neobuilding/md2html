@@ -42,9 +42,9 @@ dev = [
 ]
 
 [project.urls]
-Homepage = "https://github.com/user/md2html"
-Repository = "https://github.com/user/md2html"
-Issues = "https://github.com/user/md2html/issues"
+Homepage = "https://github.com/neobuilding/md2html"
+Repository = "https://github.com/neobuilding/md2html"
+Issues = "https://github.com/neobuilding/md2html/issues"
 
 [project.scripts]
 md2html = "md2html.cli:main"

@@ -1,6 +1,6 @@
 # Contributing to md2html
 
-Thank you for your interest in contributing!  This document outlines the
+Thank you for your interest in contributing! This document outlines the
 process for reporting issues, proposing features, and submitting code
 changes.
 
@@ -8,7 +8,7 @@ changes.
 
 ## Code of Conduct
 
-Be respectful, constructive, and inclusive.  Harassment of any kind will
+Be respectful, constructive, and inclusive. Harassment of any kind will
 not be tolerated.
 
 ---
@@ -20,10 +20,10 @@ not be tolerated.
 1. **Search existing issues** to avoid duplicates.
 2. Use the **Bug Report** issue template.
 3. Include:
-   - Your OS and Python version (`python --version`).
-   - The exact command that triggered the problem.
-   - A minimal Markdown snippet that reproduces the issue.
-   - Expected vs actual behaviour.
+    - Your OS and Python version (`python --version`).
+    - The exact command that triggered the problem.
+    - A minimal Markdown snippet that reproduces the issue.
+    - Expected vs actual behaviour.
 
 ### Proposing Features
 
@@ -37,10 +37,12 @@ not be tolerated.
 2. Follow the existing code style (PEP 8, type hints where useful).
 3. **Add tests** for new functionality.
 4. Run the test suite:
-   ```bash
-   pip install -e ".[dev]"
-   pytest
-   ```
+
+    ```bash
+    pip install -e ".[dev]"
+    pytest
+    ```
+
 5. Ensure all tests pass before submitting.
 6. Write clear commit messages (imperative mood, 50/72 rule).
 7. Open a PR against `main` using the PR template.
@@ -61,7 +63,7 @@ Types: `feat`, `fix`, `docs`, `test`, `refactor`, `chore`.
 
 ```bash
 # Clone
-git clone https://github.com/user/md2html.git
+git clone https://github.com/neobuilding/md2html.git
 cd md2html
 
 # Create virtual environment
@@ -75,14 +77,14 @@ pip install -e ".[dev]"
 pytest
 
 # Run the CLI
-python -m md2html examples/demo.md
+md2html examples/demo.md
 ```
 
 ---
 
 ## Project Architecture
 
-```
+````
 Markdown input
       │
       ▼
@@ -102,23 +104,26 @@ converter.wrap_html()               ← embed CSS, scripts, <meta>
       │
       ▼
 Self-contained HTML output
-```
+````
 
 ---
 
 ## Testing
 
-Tests use `pytest`.  To add a test:
+Tests use `pytest`. To add a test:
 
 1. Create a file in `tests/` named `test_<module>.py`.
 2. Use the `md2html` package API directly:
-   ```python
-   from md2html import convert_markdown, wrap_html
-   from md2html.preprocess import fix_list_spacing
-   ```
+
+    ```python
+    from md2html import convert_markdown, wrap_html
+    from md2html.preprocess import fix_list_spacing
+    ```
+
 3. For parameterised tests, use `@pytest.mark.parametrize`.
 
 Run with coverage:
+
 ```bash
 pytest --cov=md2html --cov-report=term
 ```

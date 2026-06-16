@@ -68,6 +68,33 @@ md2html *.md -o out/
 | `--no-math`       | Disable MathJax support                     | enabled               |
 | `--no-highlight`  | Disable code highlighting                   | enabled               |
 
+### Invocation Methods
+
+md2html supports multiple invocation styles:
+
+| Method | Command | Notes |
+|--------|---------|-------|
+| **CLI entry point** | `md2html input.md` | Requires `pip install -e .`; available globally after install |
+| **Package module** | `python -m md2html input.md` | No install needed; works from project root |
+| **Single script** | `python md2html.py input.md` | Standalone, no package structure |
+| **Windows wrapper** | `md2html.bat input.md` | Auto-activates venv; good for Windows users |
+
+```bash
+# Method 1: CLI entry point (recommended)
+md2html doc.md -o doc.html --theme dark
+
+# Method 2: run as package module
+python -m md2html doc.md -o doc.html --theme dark
+
+# Method 3: run single-file script directly
+python md2html.py doc.md -o doc.html --theme dark
+
+# Method 4: Windows bat wrapper
+md2html.bat doc.md -o doc.html --theme dark
+```
+
+All methods accept the same command-line options and produce identical output.
+
 ---
 
 ## Project Structure

@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <meta name="generator" content="md2html">
-<title>md2html 功能演示 (Dark)</title>
+<title>md2html Demo (Dark)</title>
 <style>
 
 /* === md2html Dark Theme === */
@@ -27,7 +27,7 @@
 body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC",
                  "PingFang SC", "Microsoft YaHei", Helvetica, Arial, sans-serif;
-    max-width: 860px;
+    max-width: none;
     margin: 2rem auto;
     padding: 0 1.5rem 3rem;
     line-height: 1.75;
@@ -158,7 +158,6 @@ abbr { cursor: help; border-bottom: 1px dotted var(--muted); }
     pre, .mermaid { break-inside: avoid; }
     a { color: inherit; }
 }
-
 </style>
 
 <script>
@@ -168,7 +167,6 @@ MathJax = {
 };
 </script>
 <script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
-
 </head>
 <body>
 <h1 id="md2html">md2html 功能演示</h1>
@@ -260,7 +258,7 @@ sequenceDiagram
     participant T as md2html
     participant B as 浏览器
 
-    U-&gt;&gt;T: python md2html.py doc.md -o doc.html
+    U-&gt;&gt;T: md2html doc.md -o doc.html
     T-&gt;&gt;T: 解析 Markdown
     T-&gt;&gt;T: 渲染 Mermaid
     T-&gt;&gt;T: 高亮代码
@@ -347,7 +345,7 @@ pie title 编程语言使用分布
 <h3 id="shell">Shell</h3>
 <div class="highlight" style="background: #272822"><pre style="line-height: 125%;"><span></span><code><span style="color: #959077">#!/bin/bash</span>
 <span style="color: #959077"># 批量转换 Markdown 文件</span>
-<span style="color: #F8F8F2">MD2HTML</span><span style="color: #FF4689">=</span><span style="color: #E6DB74">&quot;python md2html.py&quot;</span>
+<span style="color: #F8F8F2">MD2HTML</span><span style="color: #FF4689">=</span><span style="color: #E6DB74">&quot;md2html&quot;</span>
 
 <span style="color: #66D9EF">for</span><span style="color: #F8F8F2"> </span>file<span style="color: #F8F8F2"> </span><span style="color: #66D9EF">in</span><span style="color: #F8F8F2"> </span>docs/*.md<span style="color: #F8F8F2">; </span><span style="color: #66D9EF">do</span>
 <span style="color: #F8F8F2">    name</span><span style="color: #FF4689">=</span><span style="color: #66D9EF">$(</span>basename<span style="color: #F8F8F2"> </span><span style="color: #E6DB74">&quot;</span><span style="color: #F8F8F2">$file</span><span style="color: #E6DB74">&quot;</span><span style="color: #F8F8F2"> </span>.md<span style="color: #66D9EF">)</span>
@@ -418,6 +416,5 @@ mermaid.initialize({
     fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
 });
 </script>
-
 </body>
 </html>

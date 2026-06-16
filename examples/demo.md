@@ -70,7 +70,7 @@ sequenceDiagram
     participant T as md2html
     participant B as 浏览器
 
-    U->>T: python md2html.py doc.md -o doc.html
+    U->>T: md2html doc.md -o doc.html
     T->>T: 解析 Markdown
     T->>T: 渲染 Mermaid
     T->>T: 高亮代码
@@ -174,7 +174,7 @@ ORDER BY date DESC;
 ```bash
 #!/bin/bash
 # 批量转换 Markdown 文件
-MD2HTML="python md2html.py"
+MD2HTML="md2html"
 
 for file in docs/*.md; do
     name=$(basename "$file" .md)

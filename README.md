@@ -4,7 +4,7 @@
 
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
-[![CI](https://github.com/user/md2html/actions/workflows/ci.yml/badge.svg)](https://github.com/user/md2html/actions)
+[![CI](https://github.com/neobuilding/md2html/actions/workflows/ci.yml/badge.svg)](https://github.com/neobuilding/md2html/actions)
 
 **md2html** converts Markdown files into beautiful, self-contained HTML pages with zero external CSS dependencies. It supports Mermaid diagrams, Pygments syntax highlighting, LaTeX math, task lists, admonitions, and more — all out of the box.
 
@@ -134,7 +134,7 @@ We welcome contributions! Please read [CONTRIBUTING.md](CONTRIBUTING.md) for det
 ### Development Setup
 
 ```bash
-git clone https://github.com/user/md2html.git
+git clone https://github.com/neobuilding/md2html.git
 cd md2html
 pip install -e ".[dev]"
 pytest

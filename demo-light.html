@@ -1,0 +1,443 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<meta name="generator" content="md2html">
+<title>demo</title>
+<style>
+
+/* === md2html Light Theme === */
+:root {
+    --bg: #ffffff;
+    --fg: #24292e;
+    --border: #e1e4e8;
+    --code-bg: #f6f8fa;
+    --blockquote-border: #0366d6;
+    --blockquote-bg: #f0f7ff;
+    --th-bg: #f6f8fa;
+    --link: #0366d6;
+    --muted: #6a737d;
+    --hr: #eaecef;
+    --shadow: 0 1px 3px rgba(0,0,0,0.08);
+}
+
+* { box-sizing: border-box; margin: 0; padding: 0; }
+
+body {
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans SC",
+                 "PingFang SC", "Microsoft YaHei", Helvetica, Arial, sans-serif;
+    max-width: 860px;
+    margin: 2rem auto;
+    padding: 0 1.5rem 3rem;
+    line-height: 1.75;
+    color: var(--fg);
+    background: var(--bg);
+    -webkit-font-smoothing: antialiased;
+}
+
+h1, h2, h3, h4, h5, h6 {
+    margin-top: 2em;
+    margin-bottom: 0.6em;
+    font-weight: 600;
+    line-height: 1.3;
+}
+h1 { font-size: 2em; border-bottom: 2px solid var(--border); padding-bottom: 0.3em; }
+h2 { font-size: 1.5em; border-bottom: 1px solid var(--border); padding-bottom: 0.25em; }
+h3 { font-size: 1.25em; }
+h4 { font-size: 1.1em; }
+h5, h6 { font-size: 1em; color: var(--muted); }
+
+p { margin: 0.8em 0; }
+
+a { color: var(--link); text-decoration: none; }
+a:hover { text-decoration: underline; }
+
+/* Code */
+code {
+    font-family: "Cascadia Code", "Fira Code", "JetBrains Mono", "SF Mono",
+                 Consolas, "Liberation Mono", Menlo, monospace;
+    font-size: 0.88em;
+}
+:not(pre) > code {
+    background: var(--code-bg);
+    padding: 0.15em 0.4em;
+    border-radius: 4px;
+    color: #d63384;
+}
+pre {
+    background: var(--code-bg);
+    padding: 1em 1.2em;
+    border-radius: 8px;
+    overflow-x: auto;
+    margin: 1em 0;
+    border: 1px solid var(--border);
+    box-shadow: var(--shadow);
+}
+pre code { background: none; padding: 0; font-size: 0.85em; line-height: 1.6; }
+
+/* Blockquote */
+blockquote {
+    border-left: 4px solid var(--blockquote-border);
+    margin: 1em 0;
+    padding: 0.6em 1em;
+    background: var(--blockquote-bg);
+    border-radius: 0 6px 6px 0;
+    color: var(--muted);
+}
+blockquote p:first-child { margin-top: 0; }
+blockquote p:last-child { margin-bottom: 0; }
+
+/* Tables */
+table {
+    border-collapse: collapse;
+    width: 100%;
+    margin: 1em 0;
+    font-size: 0.95em;
+}
+th, td {
+    border: 1px solid var(--border);
+    padding: 8px 14px;
+    text-align: left;
+}
+th {
+    background: var(--th-bg);
+    font-weight: 600;
+}
+tr:nth-child(even) td { background: rgba(0,0,0,0.02); }
+
+/* Lists */
+ul, ol { padding-left: 2em; margin: 0.6em 0; }
+li { margin: 0.25em 0; }
+li > p { margin: 0.2em 0; }
+
+/* Task list */
+.task-list-item { list-style: none; margin-left: -1.5em; }
+.task-list-item input { margin-right: 0.4em; }
+
+/* Images */
+img { max-width: 100%; height: auto; border-radius: 6px; margin: 0.5em 0; }
+
+/* HR */
+hr {
+    border: none;
+    border-top: 2px solid var(--hr);
+    margin: 2em 0;
+}
+
+/* Mermaid */
+.mermaid {
+    text-align: center;
+    margin: 1.5em 0;
+    padding: 1em;
+    background: #fafbfc;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+/* Footnotes */
+.footnote { font-size: 0.88em; color: var(--muted); }
+.footnote hr { margin: 0.5em 0; border-top: 1px solid var(--border); }
+.footnote ol { padding-left: 1.5em; }
+
+/* Admonitions (callouts) */
+.admonition {
+    border-left: 4px solid;
+    padding: 0.8em 1em;
+    margin: 1em 0;
+    border-radius: 0 6px 6px 0;
+}
+.admonition.note      { border-color: #0366d6; background: #f0f7ff; }
+.admonition.warning   { border-color: #d73a49; background: #fff0f0; }
+.admonition.tip       { border-color: #28a745; background: #f0fff4; }
+.admonition.info      { border-color: #6f42c1; background: #f8f0ff; }
+.admonition-title {
+    font-weight: 600;
+    margin-bottom: 0.3em;
+    text-transform: uppercase;
+    font-size: 0.85em;
+    letter-spacing: 0.5px;
+}
+
+/* Abbreviation */
+abbr { cursor: help; border-bottom: 1px dotted var(--muted); }
+
+/* Responsive */
+@media (max-width: 640px) {
+    body { padding: 0 1rem 2rem; margin-top: 1rem; }
+    h1 { font-size: 1.6em; }
+    h2 { font-size: 1.3em; }
+    pre { padding: 0.8em; }
+    table { font-size: 0.85em; }
+    th, td { padding: 6px 8px; }
+}
+
+/* Print */
+@media print {
+    body { max-width: none; margin: 0; padding: 1cm; font-size: 12pt; }
+    pre, .mermaid { break-inside: avoid; }
+    a { color: inherit; }
+}
+
+</style>
+
+<script>
+MathJax = {
+  tex: { inlineMath: [['$', '$'], ['\(', '\)']], displayMath: [['$$', '$$'], ['\[', '\]']] },
+  svg: { fontCache: 'global' }
+};
+</script>
+<script src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js" async></script>
+
+</head>
+<body>
+<h1 id="md2html">md2html 功能演示</h1>
+<blockquote>
+<p><strong>增强版 Markdown → <abbr title="HyperText Markup Language">HTML</abbr> 转换工具</strong> — 支持 Mermaid 图表、代码高亮、数学公式。</p>
+</blockquote>
+<hr>
+<h2 id="_1">📊 表格支持</h2>
+<table>
+<thead>
+<tr>
+<th>功能</th>
+<th>状态</th>
+<th>说明</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>标准 Markdown</td>
+<td>✅</td>
+<td>标题、列表、链接、图片等</td>
+</tr>
+<tr>
+<td>Mermaid 图表</td>
+<td>✅</td>
+<td>流程图、时序图、甘特图</td>
+</tr>
+<tr>
+<td>代码高亮</td>
+<td>✅</td>
+<td>Pygments 服务端渲染，450+ 语言</td>
+</tr>
+<tr>
+<td>数学公式</td>
+<td>✅</td>
+<td>LaTeX 语法，MathJax 渲染</td>
+</tr>
+<tr>
+<td>任务列表</td>
+<td>✅</td>
+<td>勾选框支持</td>
+</tr>
+</tbody>
+</table>
+<h2 id="_2">✅ 任务列表</h2>
+<ul class="task-list">
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> 完成核心转换逻辑</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> 添加 Mermaid 支持</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled checked/><span class="task-list-indicator"></span></label> 添加代码高亮</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> 添加 PDF 导出</li>
+<li class="task-list-item"><label class="task-list-control"><input type="checkbox" disabled/><span class="task-list-indicator"></span></label> 添加实时预览</li>
+</ul>
+<h2 id="_3">📐 数学公式</h2>
+<p>行内公式：$E = mc^2$</p>
+<p>块级公式：</p>
+<p>$$<br>
+\int_{0}^{\infty} e<sup>{-x</sup>2} dx = \frac{\sqrt{\pi}}{2}<br>
+$$</p>
+<p>矩阵：</p>
+<p>$$<br>
+\begin{bmatrix}<br>
+a &amp; b \<br>
+c &amp; d<br>
+\end{bmatrix}<br>
+\begin{bmatrix}<br>
+x \<br>
+y<br>
+\end{bmatrix}<br>
+=<br>
+\begin{bmatrix}<br>
+ax + by \<br>
+cx + dy<br>
+\end{bmatrix}<br>
+$$</p>
+<h2 id="mermaid">🔷 Mermaid 流程图</h2>
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><pre class="mermaid">
+graph TD
+    A[Markdown 文件] --&gt; B{md2html}
+    B --&gt;|浅色主题| C[Light HTML]
+    B --&gt;|深色主题| D[Dark HTML]
+    C --&gt; E[浏览器查看]
+    D --&gt; E
+    E --&gt; F[打印 / 分享]
+</pre></pre></div>
+<h2 id="mermaid_1">🔷 Mermaid 时序图</h2>
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><pre class="mermaid">
+sequenceDiagram
+    participant U as 用户
+    participant T as md2html
+    participant B as 浏览器
+
+    U-&gt;&gt;T: python md2html.py doc.md -o doc.html
+    T-&gt;&gt;T: 解析 Markdown
+    T-&gt;&gt;T: 渲染 Mermaid
+    T-&gt;&gt;T: 高亮代码
+    T-&gt;&gt;B: 输出 HTML 文件
+    B-&gt;&gt;U: 美观的文档 ✨
+</pre></pre></div>
+<h2 id="mermaid_2">🔷 Mermaid 甘特图</h2>
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><pre class="mermaid">
+gantt
+    title 项目计划
+    dateFormat  YYYY-MM-DD
+    section 设计
+    需求分析     :done, a1, 2026-06-01, 3d
+    原型设计     :active, a2, 2026-06-04, 4d
+    section 开发
+    核心功能     :b1, 2026-06-08, 7d
+    测试修复     :b2, 2026-06-15, 5d
+    section 发布
+    Beta 发布    :c1, 2026-06-20, 1d
+</pre></pre></div>
+<h2 id="mermaid_3">🔷 Mermaid 饼图</h2>
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><pre class="mermaid">
+pie title 编程语言使用分布
+    &quot;Python&quot; : 42
+    &quot;JavaScript&quot; : 28
+    &quot;Go&quot; : 15
+    &quot;Rust&quot; : 10
+    &quot;其他&quot; : 5
+</pre></pre></div>
+<h2 id="_4">💻 代码高亮演示</h2>
+<h3 id="python">Python</h3>
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #008000; font-weight: bold">import</span><span style="color: #BBB"> </span><span style="color: #00F; font-weight: bold">asyncio</span>
+<span style="color: #008000; font-weight: bold">from</span><span style="color: #BBB"> </span><span style="color: #00F; font-weight: bold">dataclasses</span><span style="color: #BBB"> </span><span style="color: #008000; font-weight: bold">import</span> dataclass
+<span style="color: #008000; font-weight: bold">from</span><span style="color: #BBB"> </span><span style="color: #00F; font-weight: bold">typing</span><span style="color: #BBB"> </span><span style="color: #008000; font-weight: bold">import</span> Optional
+
+<span style="color: #A2F">@dataclass</span>
+<span style="color: #008000; font-weight: bold">class</span><span style="color: #BBB"> </span><span style="color: #00F; font-weight: bold">Task</span>:
+<span style="color: #BBB">    </span><span style="color: #BA2121; font-style: italic">&quot;&quot;&quot;一个简单的任务类&quot;&quot;&quot;</span>
+    name: <span style="color: #008000">str</span>
+    priority: <span style="color: #008000">int</span> <span style="color: #666">=</span> <span style="color: #666">0</span>
+    done: <span style="color: #008000">bool</span> <span style="color: #666">=</span> <span style="color: #008000; font-weight: bold">False</span>
+
+    <span style="color: #008000; font-weight: bold">def</span><span style="color: #BBB"> </span><span style="color: #00F">complete</span>(<span style="color: #008000">self</span>) <span style="color: #666">-&gt;</span> <span style="color: #008000; font-weight: bold">None</span>:
+        <span style="color: #008000">self</span><span style="color: #666">.</span>done <span style="color: #666">=</span> <span style="color: #008000; font-weight: bold">True</span>
+
+<span style="color: #008000; font-weight: bold">async</span> <span style="color: #008000; font-weight: bold">def</span><span style="color: #BBB"> </span><span style="color: #00F">process_tasks</span>(tasks: <span style="color: #008000">list</span>[Task]) <span style="color: #666">-&gt;</span> <span style="color: #008000">list</span>[<span style="color: #008000">str</span>]:
+<span style="color: #BBB">    </span><span style="color: #BA2121; font-style: italic">&quot;&quot;&quot;异步处理任务列表&quot;&quot;&quot;</span>
+    results <span style="color: #666">=</span> []
+    <span style="color: #008000; font-weight: bold">for</span> task <span style="color: #A2F; font-weight: bold">in</span> <span style="color: #008000">sorted</span>(tasks, key<span style="color: #666">=</span><span style="color: #008000; font-weight: bold">lambda</span> t: <span style="color: #666">-</span>t<span style="color: #666">.</span>priority):
+        <span style="color: #008000; font-weight: bold">await</span> asyncio<span style="color: #666">.</span>sleep(<span style="color: #666">0.1</span>)
+        task<span style="color: #666">.</span>complete()
+        results<span style="color: #666">.</span>append(<span style="color: #BA2121">f&quot;✅ </span><span style="color: #A45A77; font-weight: bold">{</span>task<span style="color: #666">.</span>name<span style="color: #A45A77; font-weight: bold">}</span><span style="color: #BA2121">&quot;</span>)
+    <span style="color: #008000; font-weight: bold">return</span> results
+</code></pre></div>
+<h3 id="javascript">JavaScript</h3>
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #3D7B7B; font-style: italic">// 防抖函数</span>
+<span style="color: #008000; font-weight: bold">function</span><span style="color: #BBB"> </span>debounce(fn,<span style="color: #BBB"> </span>delay<span style="color: #BBB"> </span><span style="color: #666">=</span><span style="color: #BBB"> </span><span style="color: #666">300</span>)<span style="color: #BBB"> </span>{
+<span style="color: #BBB">  </span><span style="color: #008000; font-weight: bold">let</span><span style="color: #BBB"> </span>timer<span style="color: #BBB"> </span><span style="color: #666">=</span><span style="color: #BBB"> </span><span style="color: #008000; font-weight: bold">null</span>;
+<span style="color: #BBB">  </span><span style="color: #008000; font-weight: bold">return</span><span style="color: #BBB"> </span><span style="color: #008000; font-weight: bold">function</span><span style="color: #BBB"> </span>(...args)<span style="color: #BBB"> </span>{
+<span style="color: #BBB">    </span>clearTimeout(timer);
+<span style="color: #BBB">    </span>timer<span style="color: #BBB"> </span><span style="color: #666">=</span><span style="color: #BBB"> </span>setTimeout(()<span style="color: #BBB"> </span>=&gt;<span style="color: #BBB"> </span>fn.apply(<span style="color: #008000; font-weight: bold">this</span>,<span style="color: #BBB"> </span>args),<span style="color: #BBB"> </span>delay);
+<span style="color: #BBB">  </span>};
+}
+
+<span style="color: #3D7B7B; font-style: italic">// 使用示例</span>
+<span style="color: #008000; font-weight: bold">const</span><span style="color: #BBB"> </span>searchInput<span style="color: #BBB"> </span><span style="color: #666">=</span><span style="color: #BBB"> </span><span style="color: #008000">document</span>.querySelector(<span style="color: #BA2121">&#39;#search&#39;</span>);
+searchInput.addEventListener(<span style="color: #BA2121">&#39;input&#39;</span>,<span style="color: #BBB"> </span>debounce(<span style="color: #008000; font-weight: bold">async</span><span style="color: #BBB"> </span>(e)<span style="color: #BBB"> </span>=&gt;<span style="color: #BBB"> </span>{
+<span style="color: #BBB">  </span><span style="color: #008000; font-weight: bold">const</span><span style="color: #BBB"> </span>results<span style="color: #BBB"> </span><span style="color: #666">=</span><span style="color: #BBB"> </span><span style="color: #008000; font-weight: bold">await</span><span style="color: #BBB"> </span>fetch(<span style="color: #BA2121">`/api/search?q=</span><span style="color: #A45A77; font-weight: bold">${</span>e.target.value<span style="color: #A45A77; font-weight: bold">}</span><span style="color: #BA2121">`</span>);
+<span style="color: #BBB">  </span>renderResults(<span style="color: #008000; font-weight: bold">await</span><span style="color: #BBB"> </span>results.json());
+},<span style="color: #BBB"> </span><span style="color: #666">500</span>));
+</code></pre></div>
+<h3 id="sql">SQL</h3>
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #3D7B7B; font-style: italic">-- 用户活跃度统计</span>
+<span style="color: #008000; font-weight: bold">SELECT</span>
+<span style="color: #BBB">    </span><span style="color: #008000">DATE</span>(created_at)<span style="color: #BBB"> </span><span style="color: #008000; font-weight: bold">AS</span><span style="color: #BBB"> </span><span style="color: #008000">date</span>,
+<span style="color: #BBB">    </span><span style="color: #008000; font-weight: bold">COUNT</span>(<span style="color: #008000; font-weight: bold">DISTINCT</span><span style="color: #BBB"> </span>user_id)<span style="color: #BBB"> </span><span style="color: #008000; font-weight: bold">AS</span><span style="color: #BBB"> </span>active_users,
+<span style="color: #BBB">    </span><span style="color: #008000; font-weight: bold">COUNT</span>(<span style="color: #666">*</span>)<span style="color: #BBB"> </span><span style="color: #008000; font-weight: bold">AS</span><span style="color: #BBB"> </span>total_actions,
+<span style="color: #BBB">    </span>ROUND(<span style="color: #008000; font-weight: bold">COUNT</span>(<span style="color: #666">*</span>)<span style="color: #BBB"> </span><span style="color: #666">*</span><span style="color: #BBB"> </span><span style="color: #666">1</span>.<span style="color: #666">0</span><span style="color: #BBB"> </span><span style="color: #666">/</span><span style="color: #BBB"> </span><span style="color: #008000; font-weight: bold">COUNT</span>(<span style="color: #008000; font-weight: bold">DISTINCT</span><span style="color: #BBB"> </span>user_id),<span style="color: #BBB"> </span><span style="color: #666">2</span>)<span style="color: #BBB"> </span><span style="color: #008000; font-weight: bold">AS</span><span style="color: #BBB"> </span>avg_actions_per_user
+<span style="color: #008000; font-weight: bold">FROM</span><span style="color: #BBB"> </span>user_actions
+<span style="color: #008000; font-weight: bold">WHERE</span><span style="color: #BBB"> </span>created_at<span style="color: #BBB"> </span><span style="color: #666">&gt;=</span><span style="color: #BBB"> </span><span style="color: #008000">DATE</span>(<span style="color: #BA2121">&#39;now&#39;</span>,<span style="color: #BBB"> </span><span style="color: #BA2121">&#39;-30 days&#39;</span>)
+<span style="color: #008000; font-weight: bold">GROUP</span><span style="color: #BBB"> </span><span style="color: #008000; font-weight: bold">BY</span><span style="color: #BBB"> </span><span style="color: #008000">DATE</span>(created_at)
+<span style="color: #008000; font-weight: bold">ORDER</span><span style="color: #BBB"> </span><span style="color: #008000; font-weight: bold">BY</span><span style="color: #BBB"> </span><span style="color: #008000">date</span><span style="color: #BBB"> </span><span style="color: #008000; font-weight: bold">DESC</span>;
+</code></pre></div>
+<h3 id="shell">Shell</h3>
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code><span style="color: #3D7B7B; font-style: italic">#!/bin/bash</span>
+<span style="color: #3D7B7B; font-style: italic"># 批量转换 Markdown 文件</span>
+<span style="color: #19177C">MD2HTML</span><span style="color: #666">=</span><span style="color: #BA2121">&quot;python md2html.py&quot;</span>
+
+<span style="color: #008000; font-weight: bold">for</span><span style="color: #BBB"> </span>file<span style="color: #BBB"> </span><span style="color: #008000; font-weight: bold">in</span><span style="color: #BBB"> </span>docs/*.md;<span style="color: #BBB"> </span><span style="color: #008000; font-weight: bold">do</span>
+<span style="color: #BBB">    </span><span style="color: #19177C">name</span><span style="color: #666">=</span><span style="color: #008000; font-weight: bold">$(</span>basename<span style="color: #BBB"> </span><span style="color: #BA2121">&quot;</span><span style="color: #19177C">$file</span><span style="color: #BA2121">&quot;</span><span style="color: #BBB"> </span>.md<span style="color: #008000; font-weight: bold">)</span>
+<span style="color: #BBB">    </span><span style="color: #008000">echo</span><span style="color: #BBB"> </span><span style="color: #BA2121">&quot;转换: </span><span style="color: #19177C">$file</span><span style="color: #BA2121"> → output/</span><span style="color: #A45A77; font-weight: bold">${</span><span style="color: #19177C">name</span><span style="color: #A45A77; font-weight: bold">}</span><span style="color: #BA2121">.html&quot;</span>
+<span style="color: #BBB">    </span><span style="color: #19177C">$MD2HTML</span><span style="color: #BBB"> </span><span style="color: #BA2121">&quot;</span><span style="color: #19177C">$file</span><span style="color: #BA2121">&quot;</span><span style="color: #BBB"> </span>-o<span style="color: #BBB"> </span><span style="color: #BA2121">&quot;output/</span><span style="color: #A45A77; font-weight: bold">${</span><span style="color: #19177C">name</span><span style="color: #A45A77; font-weight: bold">}</span><span style="color: #BA2121">.html&quot;</span><span style="color: #BBB"> </span>--theme<span style="color: #BBB"> </span>dark
+<span style="color: #008000; font-weight: bold">done</span>
+
+<span style="color: #008000">echo</span><span style="color: #BBB"> </span><span style="color: #BA2121">&quot;✅ 全部完成！&quot;</span>
+</code></pre></div>
+<h2 id="_5">📝 引用块</h2>
+<blockquote>
+<p>&ldquo;优秀的工具应该让复杂的事情变简单，而不是让简单的事情变复杂。&rdquo;</p>
+<p>— 设计哲学</p>
+</blockquote>
+<h3 id="_6">多层嵌套引用</h3>
+<blockquote>
+<p>第一层引用</p>
+<blockquote>
+<p>第二层引用</p>
+<blockquote>
+<p>第三层引用 — 深层次的思考</p>
+</blockquote>
+</blockquote>
+</blockquote>
+<h2 id="admonitions">🎯 提示块（Admonitions）</h2>
+<div class="admonition note">
+<p class="admonition-title">注意</p>
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>这是 `pymdownx.admonition` 扩展支持的提示块，可以自定义标题。
+</code></pre></div>
+</div>
+<div class="admonition warning">
+<p class="admonition-title">警告</p>
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>确保已安装所有依赖：`pip install markdown pymdown-extensions pygments`
+</code></pre></div>
+</div>
+<div class="admonition tip">
+<p class="admonition-title">提示</p>
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>使用 `--theme dark` 切换到深色模式，适合夜间阅读。
+</code></pre></div>
+</div>
+<div class="admonition info">
+<p class="admonition-title">信息</p>
+<div class="highlight" style="background: #f8f8f8"><pre style="line-height: 125%;"><span></span><code>Mermaid 图表需要网络连接才能加载 CDN 资源。如需离线使用，可以下载 mermaid.min.js 到本地。
+</code></pre></div>
+</div>
+<h2 id="_7">📋 定义列表</h2>
+<dl>
+<dt>Markdown</dt>
+<dd>一种轻量级标记语言，由 John Gruber 创建</dd>
+<dt><abbr title="HyperText Markup Language">HTML</abbr></dt>
+<dd>超文本标记语言，用于创建网页的标准语言</dd>
+<dt><abbr title="Cascading Style Sheets">CSS</abbr></dt>
+<dd>层叠样式表，用于描述 <abbr title="HyperText Markup Language">HTML</abbr> 文档的外观</dd>
+</dl>
+<h2 id="_8">🔗 缩写支持</h2>
+<p><abbr title="HyperText Markup Language">HTML</abbr> 是 Web 的基础。<abbr title="Cascading Style Sheets">CSS</abbr> 负责样式，<abbr title="JavaScript">JS</abbr> 负责交互。</p>
+<h2 id="_9">📸 图片</h2>
+<p><img alt="占位图" src="https://via.placeholder.com/600x200/0366d6/ffffff?text=md2html+Demo"></p>
+<hr>
+<p><strong>Happy Coding! 🎉</strong></p>
+
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10/dist/mermaid.min.js"></script>
+<script>
+mermaid.initialize({
+    startOnLoad: true,
+    theme: 'default',
+    securityLevel: 'loose',
+    fontFamily: '-apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif'
+});
+</script>
+
+</body>
+</html>

@@ -8,7 +8,93 @@ import argparse
 import sys
 from pathlib import Path
 
+try:
+    from charset_normalizer import from_bytes
+    _HAS_CHARSET_NORMALIZER = True
+except ImportError:
+    _HAS_CHARSET_NORMALIZER = False
+
 from .converter import convert_markdown, wrap_html
+
+
+def _read_text(path: Path) -> str:
+    """Read a text file with automatic encoding detection.
+
+    Strategy
+    --------
+    1. **UTF-8 variants** — exclusive, fast; invalid bytes always
+       raise ``UnicodeDecodeError``.
+    2. **``charset-normalizer``** — primary detector for non-UTF-8
+       encodings.  Accurate for CJK and most legacy encodings.
+    3. **Western probe** — ``charset-normalizer`` sometimes
+       misidentifies short Western-European texts (e.g. iso-8859-1
+       detected as cp1257).  When the detector's pick is outside
+       a "common encodings" whitelist, we probe ``iso-8859-1`` and
+       ``cp1252`` as a targeted safety-net.
+    4. **CJK manual probe** — best-effort fallback when
+       ``charset-normalizer`` is not installed.
+    5. **``latin-1`` fallback** — never raises; every byte maps
+       to a character.
+    """
+    raw = path.read_bytes()
+
+    # 1. UTF-8 variants — exclusive, always fast.
+    for enc in ("utf-8-sig", "utf-8"):
+        try:
+            return raw.decode(enc)
+        except UnicodeDecodeError:
+            continue
+
+    # 2. charset-normalizer — primary non-UTF-8 detector.
+    _cn_encoding = None
+    _cn_decoded = None
+    if _HAS_CHARSET_NORMALIZER:
+        _cn_result = from_bytes(raw).best()
+        if _cn_result is not None:
+            _cn_encoding = _cn_result.encoding
+            _cn_decoded = str(_cn_result)
+
+    # 3. Western probe — correct common charset-normalizer
+    #    misdetections for iso-8859-1 / cp1252.
+    #    Only run this when charset-normalizer actually returned
+    #    a result (otherwise fall through to the CJK probe below).
+    _WESTERN = ("iso-8859-1", "cp1252")
+    _COMMON = frozenset({
+        "utf-8", "utf-8-sig", "ascii",
+        "iso-8859-1", "iso-8859-2", "iso-8859-15",
+        "cp1252",  # Western European — very common
+        "gbk", "gb2312", "gb18030",        # Simplified Chinese
+        "big5", "big5hkscs",                # Traditional Chinese
+        "shift_jis", "cp932",               # Japanese
+        "euc_jp",                           # Japanese (Unix)
+        "euc_kr", "cp949",                  # Korean
+        "utf-16", "utf-16-le", "utf-16-be",
+    })
+    if _cn_encoding is not None and _cn_encoding not in _COMMON:
+        for enc in _WESTERN:
+            try:
+                return raw.decode(enc)
+            except (UnicodeDecodeError, LookupError):
+                continue
+
+    # 4. If charset-normalizer returned a common encoding, use it.
+    if _cn_decoded is not None:
+        return _cn_decoded
+
+    # 5. CJK manual probe — best-effort when charset-normalizer is
+    #    not installed or returned nothing.
+    #    Order: more exclusive codecs first.
+    #    NOTE: gbk/euc_kr are both "promiscuous" (they decode each
+    #    other's bytes without raising).  We prioritise gbk because
+    #    the project's primary audience writes Simplified Chinese.
+    for enc in ("big5", "shift_jis", "gbk", "euc_kr"):
+        try:
+            return raw.decode(enc)
+        except (UnicodeDecodeError, LookupError):
+            continue
+
+    # 6. Absolute last resort — latin-1 never raises.
+    return raw.decode("latin-1", errors="replace")
 
 
 def _resolve_output_path(out_path: Path) -> Path | None:
@@ -158,7 +244,7 @@ Examples:
                   file=sys.stderr)
             continue
 
-        md_text = path.read_text(encoding="utf-8")
+        md_text = _read_text(path)
         title = args.title or path.stem
 
         body = convert_markdown(

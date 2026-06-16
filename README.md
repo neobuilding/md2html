@@ -36,6 +36,9 @@ pip install -r requirements.txt
 pip install -e ".[dev]"
 ```
 
+> - `-r requirements.txt`: standard install, runtime dependencies only. Use this for everyday use.
+> - `-e ".[dev]"`: editable install + testing tools. Code changes take effect immediately — for development / contributing.
+
 ### Basic Usage
 
 ```bash

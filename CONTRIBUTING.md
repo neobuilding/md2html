@@ -66,11 +66,14 @@ Types: `feat`, `fix`, `docs`, `test`, `refactor`, `chore`.
 git clone https://github.com/neobuilding/md2html.git
 cd md2html
 
-# Create virtual environment
+# Create virtual environment (recommended)
 python -m venv venv
-source venv/bin/activate  # or venv\Scripts\activate on Windows
+source venv/bin/activate  # on Windows: venv\Scripts\activate
 
-# Install in editable mode with dev dependencies
+# Install runtime dependencies only
+pip install -r requirements.txt
+
+# Or install in editable mode with dev dependencies (for contributing)
 pip install -e ".[dev]"
 
 # Run tests
@@ -79,6 +82,13 @@ pytest
 # Run the CLI
 md2html examples/demo.md
 ```
+
+> **`-r requirements.txt` vs `-e ".[dev]"`**:
+>
+> - `-r requirements.txt` — standard install, runtime dependencies only, for **everyday use**.
+> - `-e ".[dev]"` — editable install, code changes take effect immediately
+>   (no reinstall needed), plus testing tools (`pytest`, `pytest-cov`), for
+>   **development / contributing**.
 
 ---
 

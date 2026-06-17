@@ -30,6 +30,10 @@
 
 ## Quick Start
 
+### Requirements
+
+- Python 3.9 or higher
+
 ### Installation
 
 ```bash

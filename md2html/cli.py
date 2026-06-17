@@ -1,8 +1,10 @@
 """
+
 Command-line interface for md2html.
 
 Supports single-file, batch, and stdin input modes.
 """
+from __future__ import annotations
 
 import argparse
 import sys

@@ -379,3 +379,436 @@ class TestReadTextEncoding:
         result = self._read_text(p)
         # charset-normalizer should identify cp1252 / windows-1252
         assert "Windows-1252" in result
+
+
+# ── _resolve_output_path tests ────────────────────────────────
+
+def test_resolve_output_path_new_file(tmp_path):
+    """New file: should return the path directly."""
+    from md2html.cli import _resolve_output_path
+    p = tmp_path / "new.html"
+    result = _resolve_output_path(p)
+    assert result == p
+
+
+def test_resolve_output_path_overwrite(monkeypatch, tmp_path):
+    """Existing file + user chooses 1 (overwrite): should return the path."""
+    from md2html.cli import _resolve_output_path
+    p = tmp_path / "existing.html"
+    p.write_text("old")
+    monkeypatch.setattr("builtins.input", lambda _: "1")
+    result = _resolve_output_path(p)
+    assert result == p
+
+
+def test_resolve_output_path_skip(monkeypatch, tmp_path):
+    """Existing file + user chooses 2 (skip): should return None."""
+    from md2html.cli import _resolve_output_path
+    p = tmp_path / "existing.html"
+    p.write_text("old")
+    monkeypatch.setattr("builtins.input", lambda _: "2")
+    result = _resolve_output_path(p)
+    assert result is None
+
+
+def test_resolve_output_path_new_name(monkeypatch, tmp_path):
+    """Existing file + user chooses 3 (new name): should return a new path."""
+    from md2html.cli import _resolve_output_path
+    p = tmp_path / "existing.html"
+    p.write_text("old")
+    monkeypatch.setattr("builtins.input", lambda _: "3")
+    result = _resolve_output_path(p)
+    assert result is not None
+    assert result != p
+    assert result.stem == "existing_v2"
+
+
+def test_resolve_output_path_cancel(monkeypatch, tmp_path):
+    """Existing file + user cancels (EOFError): should return None."""
+    from md2html.cli import _resolve_output_path
+    p = tmp_path / "existing.html"
+    p.write_text("old")
+    monkeypatch.setattr("builtins.input", lambda _: (_ for _ in ()).throw(EOFError()))
+    result = _resolve_output_path(p)
+    assert result is None
+
+
+# ── fix_list_spacing edge cases ──────────────────────────────
+
+def test_fix_list_spacing_code_block_followed_by_list():
+    """Code block followed by list should NOT get blank line."""
+    from md2html.preprocess import fix_list_spacing
+    md = "```python\ncode\n```\n- item"
+    fixed = fix_list_spacing(md)
+    assert fixed == md  # no blank line inserted
+
+
+def test_fix_list_spacing_heading_followed_by_list():
+    """Heading followed by list SHOULD get blank line."""
+    from md2html.preprocess import fix_list_spacing
+    md = "# Title\n- item"
+    fixed = fix_list_spacing(md)
+    lines = fixed.split("\n")
+    assert lines[1] == ""
+
+
+def test_fix_list_spacing_multiline_list_item():
+    """When a list item has continuation lines, the next list item gets a blank line inserted."""
+    from md2html.preprocess import fix_list_spacing
+    md = "- item 1\n  continuation\n- item 2"
+    fixed = fix_list_spacing(md)
+    # fix_list_spacing inserts a blank line before "- item 2"
+    # because the continuation line is treated as paragraph text
+    lines = fixed.split("\n")
+    # Should have a blank line before the second list item
+    assert lines[2] == ""
+    assert lines[3] == "- item 2"
+
+
+# ── extract_mermaid_blocks edge cases ────────────────────────
+
+def test_extract_mermaid_with_indentation():
+    """Mermaid block with leading indentation."""
+    from md2html.preprocess import extract_mermaid_blocks
+    md = "  ```mermaid\ngraph TD\n  A --> B\n  ```"
+    processed, blocks = extract_mermaid_blocks(md)
+    assert len(blocks) == 1
+    key = next(iter(blocks))
+    assert blocks[key] == "graph TD\n  A --> B"
+    assert key in processed
+
+
+def test_extract_mermaid_multiple_blocks():
+    """Multiple Mermaid blocks should get unique keys."""
+    from md2html.preprocess import extract_mermaid_blocks
+    md = "```mermaid\nA\n```\n---\n```mermaid\nB\n```"
+    processed, blocks = extract_mermaid_blocks(md)
+    assert len(blocks) == 2
+    keys = list(blocks.keys())
+    assert keys[0] != keys[1]
+
+
+def test_restore_mermaid_case2_plain_code():
+    """Restore Mermaid block when Pygments is disabled (plain <code> wrapper)."""
+    from md2html.preprocess import restore_mermaid_blocks
+    blocks = {"MD2HTML_MERMAID_BLOCK_0": "graph TD\n  A --> B"}
+    html = "<code>MD2HTML_MERMAID_BLOCK_0</code>"
+    result = restore_mermaid_blocks(html, blocks)
+    assert '<pre class="mermaid">' in result
+
+
+# ── convert_markdown edge cases ───────────────────────────────
+
+def test_convert_markdown_empty():
+    """Empty Markdown should not crash."""
+    body = convert_markdown("", enable_mermaid=False, enable_math=False)
+    assert isinstance(body, str)
+
+
+def test_convert_markdown_only_whitespace():
+    """Whitespace-only Markdown should not crash."""
+    body = convert_markdown("   \n\n  ", enable_mermaid=False, enable_math=False)
+    assert isinstance(body, str)
+
+
+def test_convert_with_mermaid_disabled():
+    """When Mermaid is disabled, ```mermaid blocks should be treated as code."""
+    md = "```mermaid\ngraph TD\n  A --> B\n```"
+    body = convert_markdown(md, theme="light",
+                            enable_mermaid=False, enable_math=False)
+    # Should be treated as a regular code block, not restored as Mermaid
+    assert "mermaid" not in body.lower() or "class=" not in body
+
+
+def test_convert_with_math_enabled():
+    """MathJax script should be included when enable_math=True."""
+    md = "$$E = mc^2$$"
+    body = convert_markdown(md, theme="light",
+                            enable_mermaid=False, enable_math=True)
+    # MathJax should be loaded in the head, but convert_markdown only returns body
+    # So we test wrap_html separately
+    html = wrap_html(body, "Test", "light", False, True)
+    assert "mathjax" in html.lower()
+
+
+def test_wrap_html_no_mermaid_no_math():
+    """When both Mermaid and Math are disabled, scripts should not be included."""
+    html = wrap_html("<p>Hi</p>", "Test", "light", False, False)
+    assert "mermaid.min.js" not in html
+    assert "mathjax" not in html.lower()
+
+
+def test_wrap_html_lang_attribute():
+    """HTML lang attribute should be set."""
+    html = wrap_html("<p>Hi</p>", "Test", "light", False, False)
+    assert 'lang=' in html
+
+
+# ── CLI main() tests ──────────────────────────────────────────
+
+def test_main_single_file(tmp_path, monkeypatch, capsys):
+    """Convert a single Markdown file via CLI."""
+    from md2html.cli import main
+    md_file = tmp_path / "test.md"
+    md_file.write_text("# Hello\n\nWorld", encoding="utf-8")
+    monkeypatch.setattr("sys.argv", ["md2html", str(md_file)])
+    exit_code = main()
+    assert exit_code == 0
+    out_path = tmp_path / "test.html"
+    assert out_path.exists()
+    content = out_path.read_text(encoding="utf-8")
+    assert "<h1" in content
+    assert "Hello" in content
+
+
+def test_main_single_file_with_output(tmp_path, monkeypatch):
+    """Specify output path via -o flag."""
+    from md2html.cli import main
+    md_file = tmp_path / "test.md"
+    md_file.write_text("# Hello", encoding="utf-8")
+    out_file = tmp_path / "custom.html"
+    monkeypatch.setattr(
+        "sys.argv", ["md2html", str(md_file), "-o", str(out_file)]
+    )
+    exit_code = main()
+    assert exit_code == 0
+    content = out_file.read_text(encoding="utf-8")
+    assert "Hello" in content
+
+
+def test_main_stdin_to_stdout(monkeypatch):
+    """Read from stdin and print to stdout."""
+    from md2html.cli import main
+    import io
+    fake_stdin = io.StringIO("# Hello\n\nWorld")
+    monkeypatch.setattr("sys.stdin", fake_stdin)
+    monkeypatch.setattr("sys.argv", ["md2html", "-"])
+    import sys
+    from io import StringIO
+    fake_stdout = StringIO()
+    monkeypatch.setattr(sys, "stdout", fake_stdout)
+    exit_code = main()
+    assert exit_code == 0
+    output = fake_stdout.getvalue()
+    assert "<h1" in output
+    assert "Hello" in output
+
+
+def test_main_stdin_with_output(tmp_path, monkeypatch):
+    """Read from stdin and write to file."""
+    from md2html.cli import main
+    import io
+    fake_stdin = io.StringIO("# Hello\n\nWorld")
+    monkeypatch.setattr("sys.stdin", fake_stdin)
+    out_file = tmp_path / "stdin_out.html"
+    monkeypatch.setattr("sys.argv", ["md2html", "-", "-o", str(out_file)])
+    exit_code = main()
+    assert exit_code == 0
+    content = out_file.read_text(encoding="utf-8")
+    assert "Hello" in content
+
+
+def test_main_file_not_found(monkeypatch):
+    """Non-existent file should print warning but not crash."""
+    from md2html.cli import main
+    monkeypatch.setattr("sys.argv", ["md2html", "/nonexistent/md.md"])
+    exit_code = main()
+    assert exit_code == 0  # returns 0 because it skips gracefully
+
+
+def test_main_dark_theme(tmp_path, monkeypatch):
+    """Dark theme flag should produce dark CSS."""
+    from md2html.cli import main
+    md_file = tmp_path / "test.md"
+    md_file.write_text("# Hello", encoding="utf-8")
+    out_file = tmp_path / "dark.html"
+    monkeypatch.setattr(
+        "sys.argv", ["md2html", str(md_file), "--theme", "dark",
+                     "-o", str(out_file)]
+    )
+    exit_code = main()
+    assert exit_code == 0
+    content = out_file.read_text(encoding="utf-8")
+    assert "#0d1117" in content or "0d1117" in content
+
+
+def test_main_with_title(tmp_path, monkeypatch):
+    """Custom title flag."""
+    from md2html.cli import main
+    md_file = tmp_path / "test.md"
+    md_file.write_text("# Hello", encoding="utf-8")
+    out_file = tmp_path / "titled.html"
+    monkeypatch.setattr(
+        "sys.argv", ["md2html", str(md_file), "--title", "My Title",
+                     "-o", str(out_file)]
+    )
+    exit_code = main()
+    assert exit_code == 0
+    content = out_file.read_text(encoding="utf-8")
+    assert "<title>My Title</title>" in content
+
+
+def test_main_no_mermaid_no_math(tmp_path, monkeypatch):
+    """Disable Mermaid and Math flags."""
+    from md2html.cli import main
+    md_file = tmp_path / "test.md"
+    md_file.write_text("# Hello\n\n```mermaid\nA --> B\n```", encoding="utf-8")
+    out_file = tmp_path / "noext.html"
+    monkeypatch.setattr(
+        "sys.argv", ["md2html", str(md_file), "--no-mermaid", "--no-math",
+                     "-o", str(out_file)]
+    )
+    exit_code = main()
+    assert exit_code == 0
+    content = out_file.read_text(encoding="utf-8")
+    assert "mathjax" not in content.lower()
+
+
+def test_main_max_width(tmp_path, monkeypatch):
+    """Max width flag."""
+    from md2html.cli import main
+    md_file = tmp_path / "test.md"
+    md_file.write_text("# Hello", encoding="utf-8")
+    out_file = tmp_path / "wide.html"
+    monkeypatch.setattr(
+        "sys.argv", ["md2html", str(md_file), "-w", "960px",
+                     "-o", str(out_file)]
+    )
+    exit_code = main()
+    assert exit_code == 0
+    content = out_file.read_text(encoding="utf-8")
+    assert "max-width: 960px" in content
+
+
+def test_main_no_highlight(tmp_path, monkeypatch):
+    """Disable syntax highlighting."""
+    from md2html.cli import main
+    md_file = tmp_path / "test.md"
+    md_file.write_text("```python\nprint('hi')\n```", encoding="utf-8")
+    out_file = tmp_path / "nohl.html"
+    monkeypatch.setattr(
+        "sys.argv", ["md2html", str(md_file), "--no-highlight",
+                     "-o", str(out_file)]
+    )
+    exit_code = main()
+    assert exit_code == 0
+    content = out_file.read_text(encoding="utf-8")
+    assert "print" in content
+
+
+def test_main_batch_mode_missing_output(monkeypatch):
+    """Batch mode without -o should error."""
+    from md2html.cli import main
+    monkeypatch.setattr("sys.argv", ["md2html", "file1.md", "file2.md"])
+    exit_code = main()
+    assert exit_code == 1
+
+
+def test_main_stdin_skip_overwrite(monkeypatch, tmp_path):
+    """Stdin mode: user chooses to skip overwriting existing file."""
+    from md2html.cli import main
+    import io
+    fake_stdin = io.StringIO("# Hello")
+    monkeypatch.setattr("sys.stdin", fake_stdin)
+    out_file = tmp_path / "exists.html"
+    out_file.write_text("old content")
+    monkeypatch.setattr("builtins.input", lambda _: "2")
+    monkeypatch.setattr("sys.argv", ["md2html", "-", "-o", str(out_file)])
+    exit_code = main()
+    assert exit_code == 1  # returns 1 when skip
+
+
+def test_main_single_file_overwrite(monkeypatch, tmp_path):
+    """Single file: user chooses to overwrite existing output."""
+    from md2html.cli import main
+    md_file = tmp_path / "test.md"
+    md_file.write_text("# New Content", encoding="utf-8")
+    out_file = tmp_path / "test.html"
+    out_file.write_text("old content")
+    monkeypatch.setattr("builtins.input", lambda _: "1")
+    monkeypatch.setattr(
+        "sys.argv", ["md2html", str(md_file), "-o", str(out_file)]
+    )
+    exit_code = main()
+    assert exit_code == 0
+    content = out_file.read_text(encoding="utf-8")
+    assert "New Content" in content
+
+
+def test_main_single_file_skip_overwrite(monkeypatch, tmp_path):
+    """Single file: user chooses to skip overwriting existing output."""
+    from md2html.cli import main
+    md_file = tmp_path / "test.md"
+    md_file.write_text("# Content", encoding="utf-8")
+    out_file = tmp_path / "test.html"
+    out_file.write_text("old")
+    monkeypatch.setattr("builtins.input", lambda _: "2")
+    monkeypatch.setattr(
+        "sys.argv", ["md2html", str(md_file), "-o", str(out_file)]
+    )
+    exit_code = main()
+    assert exit_code == 0  # skips but returns 0
+
+
+def test_main_batch_mode(tmp_path, monkeypatch):
+    """Batch mode: convert multiple files to a directory."""
+    from md2html.cli import main
+    md1 = tmp_path / "a.md"
+    md1.write_text("# A", encoding="utf-8")
+    md2 = tmp_path / "b.md"
+    md2.write_text("# B", encoding="utf-8")
+    out_dir = tmp_path / "out"
+    monkeypatch.setattr(
+        "sys.argv", ["md2html", str(md1), str(md2), "-o", str(out_dir)]
+    )
+    exit_code = main()
+    assert exit_code == 0
+    assert (out_dir / "a.html").exists()
+    assert (out_dir / "b.html").exists()
+
+
+# ── _resolve_output_path edge cases ───────────────────────────
+
+def test_resolve_output_path_v3_when_v2_exists(tmp_path, monkeypatch):
+    """When v2 already exists, should try v3."""
+    from md2html.cli import _resolve_output_path
+    p = tmp_path / "existing.html"
+    p.write_text("original")
+    (tmp_path / "existing_v2.html").write_text("v2")
+    monkeypatch.setattr("builtins.input", lambda _: "3")
+    result = _resolve_output_path(p)
+    assert result is not None
+    assert result.stem == "existing_v3"
+
+
+def test_resolve_output_path_v4_when_v2_v3_exist(tmp_path, monkeypatch):
+    """When v2 and v3 both exist, should try v4."""
+    from md2html.cli import _resolve_output_path
+    p = tmp_path / "existing.html"
+    p.write_text("original")
+    (tmp_path / "existing_v2.html").write_text("v2")
+    (tmp_path / "existing_v3.html").write_text("v3")
+    monkeypatch.setattr("builtins.input", lambda _: "3")
+    result = _resolve_output_path(p)
+    assert result is not None
+    assert result.stem == "existing_v4"
+
+
+# ── _read_text: charset_normalizer unavailable edge case ─────
+
+def test_read_text_no_charset_normalizer(monkeypatch, tmp_path):
+    """When charset-normalizer raises ImportError, CJK probe should decode GBK."""
+    import md2html.cli as cli_mod
+    # Simulate charset-normalizer not being available
+    monkeypatch.setattr(cli_mod, "_HAS_CHARSET_NORMALIZER", False)
+    content = (
+        "# GBK 测试文档\n\n"
+        "这是第一段内容，包含较多的中文文本以确保编码检测准确。\n\n"
+        "- 列表项目一：说明文字\n"
+        "- 列表项目二：更多说明\n\n"
+        "> 引用文字。\n"
+    )
+    p = tmp_path / "gbk.md"
+    p.write_bytes(content.encode("gbk"))
+    result = cli_mod._read_text(p)
+    assert "GBK 测试文档" in result

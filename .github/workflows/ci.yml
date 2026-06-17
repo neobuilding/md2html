@@ -28,6 +28,7 @@ jobs:
   # ═══════════════════════════════════════════════════════════════
   test:
     name: Test (${{ matrix.os }}, ${{ matrix.python-version }})
+    if: ${{ !(github.event_name == 'workflow_dispatch' && inputs.dry_run) }}
     runs-on: ${{ matrix.os }}
     strategy:
       fail-fast: true
@@ -71,8 +72,10 @@ jobs:
     name: Determine version
     needs: test
     if: |
-      github.event_name == 'workflow_dispatch' ||
-      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+      always() &&
+      (needs.test.result == 'success' || needs.test.result == 'skipped') &&
+      (github.event_name == 'workflow_dispatch' ||
+       (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v')))
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.version.outputs.version }}

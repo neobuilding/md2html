@@ -1,5 +1,7 @@
 name: CI
 
+run-name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || (github.event.head_commit.message || github.event.pull_request.title) }}
+
 on:
     push:
         branches: [main]
@@ -37,7 +39,7 @@ jobs:
               uses: codecov/codecov-action@v5
               with:
                   token: ${{ secrets.CODECOV_TOKEN }}
-                  file: ./coverage.xml
+                  files: ./coverage.xml
                   fail_ci_if_error: false
 
     build:

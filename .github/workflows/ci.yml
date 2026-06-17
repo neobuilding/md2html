@@ -1,112 +1,266 @@
 name: CI
 
-run-name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || (github.event.head_commit.message || github.event.pull_request.title) }}
+run-name: ${{ startsWith(github.ref, 'refs/tags/') && github.ref_name || github.event.head_commit.message || github.event.pull_request.title }}
 
 on:
-    push:
-        branches: [main]
-        tags: ["v*"]
-    pull_request:
-        branches: [main]
+  push:
+    branches: [main]
+    tags: ["v*"]
+  pull_request:
+    branches: [main]
+  workflow_dispatch:
+    inputs:
+      version:
+        description: "Version tag (e.g. v0.2.0). Leave empty to auto-detect from commits."
+        required: false
+        default: ""
+      dry_run:
+        description: "Dry run: calculate version but do NOT create tag or release."
+        type: boolean
+        default: false
+
+permissions:
+  contents: write
 
 jobs:
-    test:
-        runs-on: ${{ matrix.os }}
-        strategy:
-            fail-fast: true
-            matrix:
-                os: [ubuntu-latest, windows-latest]
-                python-version: ["3.9", "3.13"]
+  # ═══════════════════════════════════════════════════════════════
+  #  Test — always runs, on every trigger
+  # ═══════════════════════════════════════════════════════════════
+  test:
+    name: Test (${{ matrix.os }}, ${{ matrix.python-version }})
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: true
+      matrix:
+        os: [ubuntu-latest, windows-latest]
+        python-version: ["3.9", "3.13"]
 
-        steps:
-            - uses: actions/checkout@v6
+    steps:
+      - uses: actions/checkout@v6
 
-            - name: Set up Python ${{ matrix.python-version }}
-              uses: actions/setup-python@v6
-              with:
-                  python-version: ${{ matrix.python-version }}
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v6
+        with:
+          python-version: ${{ matrix.python-version }}
 
-            - name: Install dependencies
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install -e ".[dev]"
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e ".[dev]"
 
-            - name: Run tests
-              run: pytest --cov=md2html --cov-report=xml
+      - name: Run tests
+        run: pytest --cov=md2html --cov-report=xml
 
-            - name: Upload coverage to Codecov
-              if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
-              uses: codecov/codecov-action@v7
-              with:
-                  token: ${{ secrets.CODECOV_TOKEN }}
-                  files: ./coverage.xml
-                  fail_ci_if_error: false
+      - name: Upload coverage to Codecov
+        # Skip coverage upload for release triggers (tag push / workflow_dispatch)
+        if: |
+          matrix.os == 'ubuntu-latest' &&
+          matrix.python-version == '3.13' &&
+          github.event_name != 'workflow_dispatch' &&
+          !startsWith(github.ref, 'refs/tags/v')
+        uses: codecov/codecov-action@v7
+        with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          files: ./coverage.xml
+          fail_ci_if_error: false
 
-    build:
-        name: Build (${{ matrix.os }})
-        # Only run on version tags; always wait for tests to pass.
-        if: startsWith(github.ref, 'refs/tags/v')
-        needs: test
-        runs-on: ${{ matrix.os }}
-        strategy:
-            matrix:
-                include:
-                    - os: ubuntu-latest
-                      artifact-name: md2html-linux
-                      binary-path: dist/md2html
-                    - os: macos-latest
-                      artifact-name: md2html-macos
-                      binary-path: dist/md2html
-                    - os: windows-latest
-                      artifact-name: md2html-windows.exe
-                      binary-path: dist/md2html.exe
+  # ═══════════════════════════════════════════════════════════════
+  #  Auto-tag  —  determine version (release triggers only)
+  # ═══════════════════════════════════════════════════════════════
+  auto-tag:
+    name: Determine version
+    needs: test
+    if: |
+      github.event_name == 'workflow_dispatch' ||
+      (github.event_name == 'push' && startsWith(github.ref, 'refs/tags/v'))
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      tag_created: ${{ steps.push.outputs.tag_created }}
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 0
 
-        steps:
-            - uses: actions/checkout@v6
+      - name: Determine version
+        id: version
+        run: |
+          set -e
 
-            - name: Set up Python
-              uses: actions/setup-python@v6
-              with:
-                  python-version: "3.13"
+          # ── Tag push: tag already exists, just read it ──
+          if [ "${{ github.event_name }}" = "push" ]; then
+            VERSION="${{ github.ref_name }}"
+            echo "version=$VERSION" >> $GITHUB_OUTPUT
+            echo "::notice::Tag push detected: $VERSION"
+            exit 0
+          fi
 
-            - name: Install dependencies
-              run: |
-                  python -m pip install --upgrade pip
-                  pip install -r requirements.txt
-                  pip install pyinstaller
+          # ── workflow_dispatch ──
 
-            - name: Build executable
-              run: pyinstaller md2html.spec
+          # User supplied a version → use it directly
+          if [ -n "${{ inputs.version }}" ]; then
+            VERSION="${{ inputs.version }}"
+            VERSION="${VERSION#v}"
+            if ! echo "$VERSION" | grep -qE '^[0-9]+\.[0-9]+\.[0-9]+$'; then
+              echo "::error::Invalid version format: $VERSION. Use x.y.z (e.g. 0.2.0)"
+              exit 1
+            fi
+            echo "version=v$VERSION" >> $GITHUB_OUTPUT
+            echo "::notice::Using manually specified version: v$VERSION"
+            exit 0
+          fi
 
-            - name: Rename binary for release
-              # Give each binary a unique name so all three survive download/upload.
-              run: |
-                  mkdir upload
-                  cp ${{ matrix.binary-path }} upload/${{ matrix.artifact-name }}
-              shell: bash
+          # Auto-detect: find latest tag + scan commits
+          LATEST_TAG=$(git tag --sort=-v:refname | grep -E '^v[0-9]+\.[0-9]+\.[0-9]+$' | head -1)
 
-            - name: Upload artifact
-              uses: actions/upload-artifact@v7
-              with:
-                  name: ${{ matrix.artifact-name }}
-                  path: upload/${{ matrix.artifact-name }}
+          if [ -z "$LATEST_TAG" ]; then
+            echo "::notice::No existing version tag found, defaulting to v0.1.0"
+            echo "version=v0.1.0" >> $GITHUB_OUTPUT
+            exit 0
+          fi
 
-    release:
-        name: Release
-        if: startsWith(github.ref, 'refs/tags/v')
-        needs: build
-        runs-on: ubuntu-latest
-        permissions:
-            contents: write
-        steps:
-            - name: Download all artifacts
-              uses: actions/download-artifact@v6
-              with:
-                  path: artifacts
+          echo "::notice::Latest tag: $LATEST_TAG"
 
-            - name: Create Release
-              uses: softprops/action-gh-release@v2
-              with:
-                  name: ${{ github.ref_name }}
-                  files: artifacts/**/*
-                  generate_release_notes: true
+          CURRENT="${LATEST_TAG#v}"
+          MAJOR=$(echo "$CURRENT" | cut -d. -f1)
+          MINOR=$(echo "$CURRENT" | cut -d. -f2)
+          PATCH=$(echo "$CURRENT" | cut -d. -f3)
+
+          COMMITS=$(git log ${LATEST_TAG}..HEAD --oneline --format="%s")
+
+          if [ -z "$COMMITS" ]; then
+            echo "::warning::No new commits since $LATEST_TAG. Nothing to release."
+            echo "version=" >> $GITHUB_OUTPUT
+            exit 0
+          fi
+
+          echo "::group::Commits since $LATEST_TAG"
+          echo "$COMMITS"
+          echo "::endgroup::"
+
+          BUMP="patch"
+          if echo "$COMMITS" | grep -qE '^BREAKING CHANGE|^[a-z]+!:'; then
+            BUMP="major"
+          elif echo "$COMMITS" | grep -qE '^feat(\([a-z-]+\))?:'; then
+            BUMP="minor"
+          fi
+
+          echo "::notice::Bump type: $BUMP"
+
+          if [ "$BUMP" = "major" ]; then
+            MAJOR=$((MAJOR + 1)); MINOR=0; PATCH=0
+          elif [ "$BUMP" = "minor" ]; then
+            MINOR=$((MINOR + 1)); PATCH=0
+          else
+            PATCH=$((PATCH + 1))
+          fi
+
+          NEW_VERSION="v${MAJOR}.${MINOR}.${PATCH}"
+          echo "::notice::Calculated next version: $NEW_VERSION"
+          echo "version=$NEW_VERSION" >> $GITHUB_OUTPUT
+
+      - name: Show version (dry run)
+        if: inputs.dry_run
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          if [ -z "$VERSION" ]; then
+            echo "::warning::Dry run: no new commits, no version to release."
+          else
+            echo "::notice::Dry run: would create and release tag $VERSION"
+          fi
+          echo "Dry run complete. Nothing was published."
+
+      - name: Create and push tag
+        id: push
+        if: github.event_name == 'workflow_dispatch' && !inputs.dry_run && steps.version.outputs.version != ''
+        run: |
+          VERSION="${{ steps.version.outputs.version }}"
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git tag "$VERSION"
+          git push origin "$VERSION"
+          echo "tag_created=true" >> $GITHUB_OUTPUT
+          echo "::notice::Tag $VERSION created and pushed."
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: No new commits
+        if: github.event_name == 'workflow_dispatch' && !inputs.dry_run && steps.version.outputs.version == ''
+        run: |
+          echo "::warning::No new commits since the latest tag. Push new commits first."
+
+  # ═══════════════════════════════════════════════════════════════
+  #  Build  —  3-platform PyInstaller (release triggers only)
+  # ═══════════════════════════════════════════════════════════════
+  build:
+    name: Build (${{ matrix.os }})
+    needs: auto-tag
+    if: |
+      success() &&
+      needs.auto-tag.outputs.version != '' &&
+      !(github.event_name == 'workflow_dispatch' && inputs.dry_run)
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        include:
+          - os: ubuntu-latest
+            artifact-name: md2html-linux
+            binary-path: dist/md2html
+          - os: macos-latest
+            artifact-name: md2html-macos
+            binary-path: dist/md2html
+          - os: windows-latest
+            artifact-name: md2html-windows.exe
+            binary-path: dist/md2html.exe
+
+    steps:
+      - uses: actions/checkout@v6
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: "3.13"
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+          pip install pyinstaller
+
+      - name: Build executable
+        run: pyinstaller md2html.spec
+
+      - name: Rename binary for release
+        run: |
+          mkdir upload
+          cp ${{ matrix.binary-path }} upload/${{ matrix.artifact-name }}
+        shell: bash
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v7
+        with:
+          name: ${{ matrix.artifact-name }}
+          path: upload/${{ matrix.artifact-name }}
+
+  # ═══════════════════════════════════════════════════════════════
+  #  Release  —  GitHub Release (release triggers only)
+  # ═══════════════════════════════════════════════════════════════
+  release:
+    name: Release
+    needs: [auto-tag, build]
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - name: Download all artifacts
+        uses: actions/download-artifact@v6
+        with:
+          path: artifacts
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
+        with:
+          name: ${{ needs.auto-tag.outputs.version }}
+          tag_name: ${{ needs.auto-tag.outputs.version }}
+          files: artifacts/**/*
+          generate_release_notes: true

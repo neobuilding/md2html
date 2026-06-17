@@ -116,7 +116,7 @@ md2html supports two ways to publish a new release:
 
 **Method 1 — Auto Release via GitHub Actions (recommended):**
 
-1. Go to **Actions** → **Auto Release** → click **Run workflow**
+1. Go to **Actions** → **CI** → click **Run workflow**
 2. Leave `version` empty to auto-detect from commits, or type a specific version (e.g. `v0.2.0`)
 3. Click **Run workflow**
 
@@ -129,17 +129,17 @@ The workflow reads commits since the last tag and follows [Conventional Commits]
 | `BREAKING CHANGE`   | major       | `v0.1.0` → `v1.0.0`       |
 | `docs:` / `chore:`  | no release  | (must use Method 2 explicitly) |
 
-After the tag is created, `ci.yml` is triggered automatically — same build + release process as Method 2.
+After the version is determined, the workflow builds for all 3 platforms and creates a GitHub Release automatically.
 
 **Method 2 — Manual tag (for precise control):**
 
 ```bash
-# Push a version tag and let GitHub Actions build + publish for all platforms
+# Push a version tag — ci.yml picks it up and does build + release
 git tag v0.2.0
 git push origin v0.2.0
 ```
 
-The workflow (`.github/workflows/ci.yml`) spins up three parallel runners, builds via `pyinstaller md2html.spec`, and attaches `md2html-windows.exe`, `md2html-macos`, and `md2html-linux` to a new GitHub Release.
+Both methods share the same build + release pipeline in `.github/workflows/ci.yml` — it spins up three parallel runners, builds via `pyinstaller md2html.spec`, and attaches `md2html-windows.exe`, `md2html-macos`, and `md2html-linux` to a new GitHub Release.
 
 ### Basic Usage
 

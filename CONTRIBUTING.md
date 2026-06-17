@@ -171,12 +171,12 @@ md2html supports two release methods. Both produce the same result — a GitHub 
 
 **Method 1 — Auto Release (recommended):**
 
-1. Go to the repository **Actions** tab → select **Auto Release**.
+1. Go to the repository **Actions** tab → select **CI**.
 2. Click **Run workflow**.
 3. Leave `version` empty to auto-detect from commits, or type a specific version (e.g. `v0.2.0`).
 4. Click **Run workflow**.
 
-The workflow reads commits since the last tag and calculates the next version automatically using Conventional Commits rules. After the tag is pushed, `ci.yml` is triggered to build and publish the release.
+The workflow reads commits since the last tag and calculates the next version automatically using Conventional Commits rules. It then builds for all 3 platforms and creates a GitHub Release — all in one pipeline.
 
 **Method 2 — Manual tag (for precise control):**
 

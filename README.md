@@ -39,6 +39,85 @@ pip install -e ".[dev]"
 > - `-r requirements.txt`: standard install, runtime dependencies only. Use this for everyday use.
 > - `-e ".[dev]"`: editable install + testing tools. Code changes take effect immediately — for development / contributing.
 
+### Standalone Executable (.exe)
+
+For users who don't have Python installed, md2html can be packaged into a single
+self-contained `.exe` file using [PyInstaller](https://pyinstaller.org/).
+No Python, no venv, no `pip install` — just download and run.
+
+**Build the executable:**
+
+```bash
+pip install pyinstaller
+# Use md2html.py as entry point (cli.py has relative imports that fail
+# when PyInstaller runs it standalone).
+# --collect-submodules pymdownx is needed because markdown loads
+# pymdownx extensions dynamically via importlib (static analysis
+# can't trace them).
+pyinstaller --onefile --name md2html --paths . --collect-submodules pymdownx md2html.py
+# Output: dist/md2html.exe  (Windows)
+#         dist/md2html      (macOS / Linux)
+```
+
+**Using the `.spec` file (recommended for repeatable builds):**
+
+The first `pyinstaller` run generates `md2html.spec` — a build config file
+that captures all the options above. On subsequent builds you can skip the
+long command line and just use:
+
+```bash
+pyinstaller md2html.spec
+```
+
+**One spec, all platforms.** The `.spec` file is cross-platform — `EXE()`
+inside it is PyInstaller's unified executable target, not Windows-specific.
+Platform-only options (e.g. `codesign_identity` on macOS) are silently
+ignored on other OSes. Run the same spec on each target OS:
+
+```bash
+# On Windows       → dist/md2html.exe
+# On macOS         → dist/md2html
+# On Linux         → dist/md2html
+pyinstaller md2html.spec
+```
+
+This is also how CI pipelines work: one workflow matrix runs
+`pyinstaller md2html.spec` on `ubuntu-latest`, `macos-latest`, and
+`windows-latest` in parallel.
+
+**End-user experience:**
+
+```bash
+# Windows
+md2html.exe input.md -o output.html --theme dark
+
+# macOS / Linux
+./md2html input.md -o output.html --theme dark
+```
+
+**Pre-built binaries:**
+
+The [latest release](https://github.com/neobuilding/md2html/releases/latest)
+includes ready-to-run executables for Windows, macOS, and Linux — built
+automatically by GitHub Actions on every version tag.
+
+> **Trade-offs**: The binary is ~15–20 MB (bundles a Python interpreter).
+> Pre-built binaries are amd64 only; for other architectures, build from
+> source with the commands above.
+
+**Triggering a release (maintainers):**
+
+```bash
+# Push a version tag and let GitHub Actions build + publish for all platforms
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+The workflow (`.github/workflows/release.yml`) spins up three parallel
+runners, builds via `pyinstaller md2html.spec`, and attaches
+`md2html-windows.exe`, `md2html-macos`, and `md2html-linux` to a new
+GitHub Release.
+
 ### Basic Usage
 
 ```bash

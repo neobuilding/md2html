@@ -5,6 +5,8 @@
 [![Python](https://img.shields.io/badge/python-3.9%2B-blue)](https://www.python.org/)
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![CI](https://github.com/neobuilding/md2html/actions/workflows/ci.yml/badge.svg)](https://github.com/neobuilding/md2html/actions)
+[![codecov](https://codecov.io/gh/neobuilding/md2html/branch/main/graph/badge.svg)](https://codecov.io/gh/neobuilding/md2html)
+[![CI](https://github.com/neobuilding/md2html/actions/workflows/release.yml/badge.svg)](https://github.com/neobuilding/md2html/actions)
 
 **md2html** converts Markdown files into beautiful, self-contained HTML pages with zero external CSS dependencies. It supports Mermaid diagrams, Pygments syntax highlighting, LaTeX math, task lists, admonitions, and more — all out of the box.
 
@@ -154,12 +156,12 @@ md2html *.md -o out/
 
 md2html supports multiple invocation styles:
 
-| Method | Command | Notes |
-|--------|---------|-------|
-| **CLI entry point** | `md2html input.md` | Requires `pip install -e .`; available globally after install |
-| **Package module** | `python -m md2html input.md` | No install needed; works from project root |
-| **Single script** | `python md2html.py input.md` | Standalone, no package structure |
-| **Windows wrapper** | `md2html.bat input.md` | Auto-activates venv; good for Windows users |
+| Method              | Command                      | Notes                                                         |
+| ------------------- | ---------------------------- | ------------------------------------------------------------- |
+| **CLI entry point** | `md2html input.md`           | Requires `pip install -e .`; available globally after install |
+| **Package module**  | `python -m md2html input.md` | No install needed; works from project root                    |
+| **Single script**   | `python md2html.py input.md` | Standalone, no package structure                              |
+| **Windows wrapper** | `md2html.bat input.md`       | Auto-activates venv; good for Windows users                   |
 
 ```bash
 # Method 1: CLI entry point (recommended)

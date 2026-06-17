@@ -1,38 +1,110 @@
 name: CI
 
 on:
-  push:
-    branches: [main]
-  pull_request:
-    branches: [main]
+    push:
+        branches: [main]
+        tags: ["v*"]
+    pull_request:
+        branches: [main]
 
 jobs:
-  test:
-    runs-on: ${{ matrix.os }}
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest, macos-latest]
-        python-version: ["3.9", "3.10", "3.11", "3.12", "3.13"]
+    test:
+        runs-on: ${{ matrix.os }}
+        strategy:
+            fail-fast: true
+            matrix:
+                os: [ubuntu-latest, windows-latest]
+                python-version: ["3.9", "3.13"]
 
-    steps:
-      - uses: actions/checkout@v4
+        steps:
+            - uses: actions/checkout@v4
 
-      - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v5
-        with:
-          python-version: ${{ matrix.python-version }}
+            - name: Set up Python ${{ matrix.python-version }}
+              uses: actions/setup-python@v5
+              with:
+                  python-version: ${{ matrix.python-version }}
 
-      - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -e ".[dev]"
+            - name: Install dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install -e ".[dev]"
 
-      - name: Run tests
-        run: pytest --cov=md2html --cov-report=xml
+            - name: Run tests
+              run: pytest --cov=md2html --cov-report=xml
 
-      - name: Upload coverage to Codecov
-        if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.12'
-        uses: codecov/codecov-action@v4
-        with:
-          file: ./coverage.xml
-          fail_ci_if_error: false
+            - name: Upload coverage to Codecov
+              if: matrix.os == 'ubuntu-latest' && matrix.python-version == '3.13'
+              uses: codecov/codecov-action@v5
+              with:
+                  token: ${{ secrets.CODECOV_TOKEN }}
+                  file: ./coverage.xml
+                  fail_ci_if_error: false
+
+    build:
+        name: Build (${{ matrix.os }})
+        # Only run on version tags; always wait for tests to pass.
+        if: startsWith(github.ref, 'refs/tags/v')
+        needs: test
+        runs-on: ${{ matrix.os }}
+        strategy:
+            matrix:
+                include:
+                    - os: ubuntu-latest
+                      artifact-name: md2html-linux
+                      binary-path: dist/md2html
+                    - os: macos-latest
+                      artifact-name: md2html-macos
+                      binary-path: dist/md2html
+                    - os: windows-latest
+                      artifact-name: md2html-windows.exe
+                      binary-path: dist/md2html.exe
+
+        steps:
+            - uses: actions/checkout@v4
+
+            - name: Set up Python
+              uses: actions/setup-python@v5
+              with:
+                  python-version: "3.13"
+
+            - name: Install dependencies
+              run: |
+                  python -m pip install --upgrade pip
+                  pip install -r requirements.txt
+                  pip install pyinstaller
+
+            - name: Build executable
+              run: pyinstaller md2html.spec
+
+            - name: Rename binary for release
+              # Give each binary a unique name so all three survive download/upload.
+              run: |
+                  mkdir upload
+                  cp ${{ matrix.binary-path }} upload/${{ matrix.artifact-name }}
+              shell: bash
+
+            - name: Upload artifact
+              uses: actions/upload-artifact@v4
+              with:
+                  name: ${{ matrix.artifact-name }}
+                  path: upload/${{ matrix.artifact-name }}
+
+    release:
+        name: Release
+        if: startsWith(github.ref, 'refs/tags/v')
+        needs: build
+        runs-on: ubuntu-latest
+        permissions:
+            contents: write
+        steps:
+            - name: Download all artifacts
+              uses: actions/download-artifact@v4
+              with:
+                  path: artifacts
+
+            - name: Create Release
+              uses: softprops/action-gh-release@v2
+              with:
+                  name: ${{ github.ref_name }}
+                  files: artifacts/**/*
+                  generate_release_notes: true

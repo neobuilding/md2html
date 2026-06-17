@@ -6,7 +6,6 @@
 [![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
 [![CI](https://github.com/neobuilding/md2html/actions/workflows/ci.yml/badge.svg)](https://github.com/neobuilding/md2html/actions)
 [![codecov](https://codecov.io/gh/neobuilding/md2html/branch/main/graph/badge.svg)](https://codecov.io/gh/neobuilding/md2html)
-[![CI](https://github.com/neobuilding/md2html/actions/workflows/release.yml/badge.svg)](https://github.com/neobuilding/md2html/actions)
 
 **md2html** converts Markdown files into beautiful, self-contained HTML pages with zero external CSS dependencies. It supports Mermaid diagrams, Pygments syntax highlighting, LaTeX math, task lists, admonitions, and more — all out of the box.
 
@@ -113,16 +112,34 @@ automatically by GitHub Actions on every version tag.
 
 **Triggering a release (maintainers):**
 
+md2html supports two ways to publish a new release:
+
+**Method 1 — Auto Release via GitHub Actions (recommended):**
+
+1. Go to **Actions** → **Auto Release** → click **Run workflow**
+2. Leave `version` empty to auto-detect from commits, or type a specific version (e.g. `v0.2.0`)
+3. Click **Run workflow**
+
+The workflow reads commits since the last tag and follows [Conventional Commits](https://www.conventionalcommits.org/) rules to calculate the next version automatically:
+
+| Commit prefix        | Version bump | Example                     |
+| -------------------- | ----------- | --------------------------- |
+| `feat:` / `feat!:` | minor / major | `v0.1.0` → `v0.2.0`       |
+| `fix:`              | patch       | `v0.1.0` → `v0.1.1`       |
+| `BREAKING CHANGE`   | major       | `v0.1.0` → `v1.0.0`       |
+| `docs:` / `chore:`  | no release  | (must use Method 2 explicitly) |
+
+After the tag is created, `ci.yml` is triggered automatically — same build + release process as Method 2.
+
+**Method 2 — Manual tag (for precise control):**
+
 ```bash
 # Push a version tag and let GitHub Actions build + publish for all platforms
-git tag v0.1.0
-git push origin v0.1.0
+git tag v0.2.0
+git push origin v0.2.0
 ```
 
-The workflow (`.github/workflows/release.yml`) spins up three parallel
-runners, builds via `pyinstaller md2html.spec`, and attaches
-`md2html-windows.exe`, `md2html-macos`, and `md2html-linux` to a new
-GitHub Release.
+The workflow (`.github/workflows/ci.yml`) spins up three parallel runners, builds via `pyinstaller md2html.spec`, and attaches `md2html-windows.exe`, `md2html-macos`, and `md2html-linux` to a new GitHub Release.
 
 ### Basic Usage
 

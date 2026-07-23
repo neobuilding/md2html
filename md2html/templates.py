@@ -357,7 +357,7 @@ mermaid.initialize({
 MATHJAX_SCRIPT = """
 <script>
 MathJax = {
-  tex: { inlineMath: [['$', '$'], ['\\(', '\\)']], displayMath: [['$$', '$$'], ['\\[', '\\]']] },
+  tex: { inlineMath: [['$', '$'], ['\\\\(', '\\\\)']], displayMath: [['$$', '$$'], ['\\\\[', '\\\\]']] },
   svg: { fontCache: 'global' }
 };
 </script>
